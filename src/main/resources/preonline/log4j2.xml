@@ -1,24 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration status="error" shutdownHook="disable">
+
+    <properties>
+        <property name="LOG_HOME">/var/log/javaLearning</property>
+        <property name="FILE_NAME">javaLearning</property>
+        <property name="MAVEN_PROFILE_TEST_FILE_NAME">mavenProfileTest</property>
+    </properties>
+
     <!--先定义所有的appender-->
     <appenders>
         <!--这个输出控制台的配置-->
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%date{yyyy-MM-dd HH:mm:ss,SSS} [%thread] [%level] %logger{1.} - %msg%n"/>
+            <PatternLayout pattern="%date{yyyy-MM-dd HH:mm:ss,SSS} [%thread] [%level]  %logger{1.} - %msg%n"/>
         </Console>
+
+        <!-- 按时间切分，也可以加入按大小切分 -->
+        <RollingFile name="RollingFile" fileName="${LOG_HOME}/${FILE_NAME}.log"
+                     filePattern="${LOG_HOME}/${FILE_NAME}.log.%d{yyyyMMdd}-%i">
+            <PatternLayout pattern="%date{yyyy-MM-dd HH:mm:ss,SSS} [%thread] [%level] %logger{1.} - %msg%n"/>
+            <Policies>
+                <!--默认日志输出策略为间隔1分钟生成一个新文件，最小单位是分钟-->
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <!--或者大小超过10M-->
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+        </RollingFile>
+
+        <!--指定某个日志器输出到某个文件-->
+        <RollingFile name="testLog" fileName="${LOG_HOME}/${MAVEN_PROFILE_TEST_FILE_NAME}.log"
+                     filePattern="${LOG_HOME}/${MAVEN_PROFILE_TEST_FILE_NAME}.log.%d{yyyyMMdd}-%i">
+            <PatternLayout pattern="%date{yyyy-MM-dd HH:mm:ss,SSS} [%thread] [%level] %logger - %msg%n"/>
+            <Policies>
+                <!--默认日志输出策略为间隔1分钟生成一个新文件，最小单位是分钟-->
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <!--或者大小超过10M-->
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+        </RollingFile>
+
+        <!--异步日志输出，日志输出后的业务逻辑不用等待日志输出后再执行，业务逻辑的执行和日志的输出又两个线程进行-->
+        <Async name="Async">
+            <AppenderRef ref="RollingFile"/>
+        </Async>
     </appenders>
+
+    <!--日志器的配置-->
+    <!--日志器分根日志器Root和自定义日志器，当根据日志名字获取不到指定的日志器时就使用Root作为默认的日志器-->
     <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
     <loggers>
-        <!--<logger name="org.springframework.kafka" level="DEBUG" />-->
-        <!-- 
-        <logger name="org.mybatis" level="DEBUG" />
-        <logger name="java.sql" level="DEBUG"/>
-         -->
+    <!--指定-->
+        <Logger name="com.xiaojukeji.MavenProfileTest" level="trace" additivity="true">
+            <appender-ref ref="testLog" />
+        </Logger>
 
-        <!--建立一个默认的root的logger, 除了上面定义的logger，其他只有warn才会打印-->
+        <!--根日志器没有名字，没有为代码中指定日志器做配置，默认都走根日志器的配置-->
         <root level="INFO">
-            <!--<appender-ref ref="RollingFile"/>-->
+            <appender-ref ref="RollingFile"/>
             <appender-ref ref="Console"/>
         </root>
     </loggers>
